@@ -1,0 +1,24 @@
+from pyCryptoTransactions.networks.cosmos.cosmos import CosmosChain
+
+class PersistenceCHain(CosmosChain):
+
+    def __init__(self, address):
+        super().__init__(address)
+
+        self._apiAdress = "https://api-persistence.cosmostation.io/v1/"
+        self.chain = "osmosis-1"
+        self.ibcTokenApiAddress = "https://api-utility.cosmostation.io/v1//ibc/tokens/osmosis-1"
+        self.unit = "XPRT"
+        self._getAllIBCTokens()
+    
+    @property
+    def pathToMemo(self):
+        return ["data","tx","body","memo"]
+    
+    @property
+    def pathToFee(self):
+        return ["data","tx","auth_info","fee","amount",0,"amount"]
+    
+    @property
+    def pathToFeeCurrency(self):
+        return ["data","tx","auth_info","fee","amount",0,"denom"]
