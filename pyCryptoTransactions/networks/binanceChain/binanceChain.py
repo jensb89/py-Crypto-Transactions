@@ -19,6 +19,7 @@ class BinanceChain(Importer):
         self.rawTxs = None
         self.address = address
         self.denominator = Decimal(int(1E8))
+        self.cancelledOrders = list()
     
     def _initRequest(self):
         headers = {'Accepts': 'application/json'}
@@ -64,18 +65,35 @@ class BinanceChain(Importer):
         args = {}
         args['format'] = 'json'
         return self._request('/tx/' + txId, **args)
+    
+    def getOrder(self, orderId):
+        args = {}
+        args["format"] = 'json'
+        return self._request('/orders/' + orderId, **args)
+    
+    def getTrades(self, orderId, timestamp:int, isBuy:bool):
+        args = {}
+        args["format"] = 'json'
+        args["start"] = timestamp -10
+        args["end"] = timestamp + 10
+        if isBuy:
+            args["buyerOrderId"] = orderId
+        else:
+            args["sellerOrderId"] = orderId
+        print(args)
+        return self._request('/trades', **args)
 
     def getFees(self):
         return self._request('/fees')
 
-    def getTrades(self,offset=0, limit=500, **kwargs):
-        values = {}
-        values['offset'] = offset
-        values['limit'] = limit
-        for k in kwargs:
-            if kwargs[k] is not None:
-                values[k] = kwargs[k]
-        self._request('/trades', **values)
+    #def getTrades(self,offset=0, limit=500, **kwargs):
+    #    values = {}
+    #    values['offset'] = offset
+    #    values['limit'] = limit
+    #    for k in kwargs:
+    #        if kwargs[k] is not None:
+    #            values[k] = kwargs[k]
+    #    self._request('/trades', **values)
 
 
     def getTransactionsPage(self,page=-1):
@@ -121,7 +139,7 @@ class BinanceChain(Importer):
     def _getAllTransactionIds(self):
         ids = []
         for entry in self.rawTxs["txArray"]:
-            ids.append((entry["timeStamp"],entry["txHash"]))
+            ids.append((entry["timeStamp"],entry["txHash"],entry["txFee"]))
         return ids
     
     #def manualImportTransactionFromID(self, txID):
@@ -132,8 +150,8 @@ class BinanceChain(Importer):
 
     def getTransactions(self, startTime=None, offset=None) -> 'TransactionList':
         self._getAllRawTxsFromTxPage()
-        for timestamp, id in self._getAllTransactionIds():
-
+        for timestamp, id, feeValue in self._getAllTransactionIds():
+            feeValue = Decimal(str(feeValue))
             result = self.getTransaction(id)
 
             t = Transaction(network="binanceChain")
@@ -156,7 +174,10 @@ class BinanceChain(Importer):
 
                 if isOutTransaction:
                     t.category = "Transfer Out" if not(isMulitSend) else "Stake"
-                    t.fee = Fee(Decimal(37500)/self.denominator if not(isMulitSend) else Decimal(30000)/self.denominator, "BNB")
+                    if feeValue>0:
+                        t.fee = Fee(feeValue,"BNB")
+                    else:
+                        t.fee = Fee(Decimal(37500)/self.denominator if not(isMulitSend) else Decimal(30000)/self.denominator, "BNB")
                     coins = transaction["outputs"][0]["coins"]
                     #fixedFees = self.getFees()["fixed_fee_params"]  # Todo query fixed fees
                 else:
@@ -169,13 +190,17 @@ class BinanceChain(Importer):
                 if result["tx"]["value"]["memo"]:
                     t.note = "memo:" + result["tx"]["value"]["memo"]
 
+                i = 0
                 for coin in coins:
                     tmp = deepcopy(t)
                     if isOutTransaction:
                         tmp.posOut = Position(Decimal(coin["amount"])/self.denominator, coin["denom"].split("-")[0])
                     else:
                         tmp.posIn = Position(Decimal(coin["amount"])/self.denominator, coin["denom"].split("-")[0]) 
+                    if i>0:
+                        tmp.fee.amount = Decimal(0)
                     self.txList.append(tmp)
+                    i+=1
                     # Hack: Put equivalent transaction for BEPSWAP
                     #if tmp["category"] == "Stake":
                     #    tmp2 = tmp.copy()
@@ -191,18 +216,48 @@ class BinanceChain(Importer):
                 t.category = "Trade"
                 order = result["tx"]["value"]["msg"][0]["value"]
                 t.orderId = order["id"]
+                orderInfo = self.getOrder(t.orderId)
                 pair = order["symbol"].split('_')
+
+                trades = self.getTrades(timestamp=int(t.datetime.timestamp()*1E3), orderId=t.orderId, isBuy=orderInfo["side"]==1)
                 if order["ordertype"] == 2 and order["side"]==2: #sell
-                    t.posIn = Position(Decimal(order["price"])/self.denominator* Decimal(order["quantity"])/self.denominator, pair[1].split('-')[0])
-                    t.posOut = Position(Decimal(order["quantity"])/self.denominator, pair[0].split('-')[0])
+                    posIn = Position(Decimal(0),pair[1].split('-')[0])
+                    posOut = Position(Decimal(0),pair[0].split('-')[0])
+                    fee = Fee(0, "BNB")
+                    for trade in trades["trade"]:
+                        posIn += Position( Decimal(trade["price"].rstrip("0")) * Decimal(trade["quantity"].rstrip("0")), pair[1].split('-')[0])
+                        posOut += Position( Decimal(trade["quantity"].rstrip("0")), pair[0].split('-')[0])
+                    fee = Fee( Decimal(trade["sellFee"].split(";")[0].split("BNB:")[1]), "BNB")
                 elif order["ordertype"] == 2 and order["side"]==1: #buy
-                    t.posIn = Position(Decimal(order["quantity"])/self.denominator, pair[0].split('-')[0])
-                    t.posOut = Position(Decimal(order["price"])/self.denominator* Decimal(int(order["quantity"]))/self.denominator, pair[1].split('-')[0])
+                    posIn = Position(Decimal(0),pair[0].split('-')[0])
+                    posOut = Position(Decimal(0),pair[1].split('-')[0])
+                    for trade in trades["trade"]:
+                        posIn += Position(  Decimal(trade["quantity"].rstrip("0")), pair[0].split('-')[0])
+                        posOut += Position(Decimal(trade["price"].rstrip("0")) * Decimal(trade["quantity"].rstrip("0")), pair[1].split('-')[0])
+                    fee = Fee( Decimal(trade["buyFee"].split(";")[0].split("BNB:")[1]), "BNB")
+
+                t.posIn = posIn
+                t.posOut = posOut
+                t.fee = fee
+                    
+                #orderPrice1 = Decimal(order["price"])/self.denominator
+                #orderQuantity1 = Decimal(order["quantity"])/self.denominator
+
+               #print("{} == P1:{} Q1:{}, P2:{}, Q2:{} ({})".format(t.orderId, orderPrice1,orderQuantity1,orderPrice,orderQuantity,pair))
+
+                if t.orderId in self.cancelledOrders or orderInfo["status"]=="Canceled":
+                    continue
+                #if order["ordertype"] == 2 and order["side"]==2: #sell
+                #    t.posIn = Position(orderPrice * orderQuantity, pair[1].split('-')[0])
+                #    t.posOut = Position(orderQuantity, pair[0].split('-')[0])
+                #elif order["ordertype"] == 2 and order["side"]==1: #buy
+                #    t.posIn = Position(orderQuantity, pair[0].split('-')[0])
+                #    t.posOut = Position(orderPrice * orderQuantity, pair[1].split('-')[0])
                 
-                t.fee = Fee(0, "BNB")
+                #t.fee = Fee(0, "BNB")
                 t.price = Decimal(order["price"])/self.denominator
                 t.tradingPair = (pair[0].split('-')[0], pair[1].split('-')[0])
-
+                
                 self.txList.append(t)
 
             elif result["tx"]["value"]["msg"][0]["type"] == "bridge/TransferOutMsg":
@@ -213,8 +268,15 @@ class BinanceChain(Importer):
                 t.fee = Fee(Decimal("0.0002"), "BNB")
                 self.txList.append(t)
             elif result["tx"]["value"]["msg"][0]["type"] == "dex/CancelOrder":
+                # we must find orders that match this order id or prevent new ones getting added
+                order = result["tx"]["value"]["msg"][0]["value"]
+                orderId = order["refid"]
+                if self.txList.fromOrderId(orderId) is not None:
+                    self.txList.remove(self.txList.fromOrderId(orderId))
+                else:
+                    self.cancelledOrders.append(orderId)
                 t.category = "Loss"
-                t.fee = Fee(Decimal("0.00001000"),"BNB")
+                t.fee = Fee(Decimal("0.00001"),"BNB")
                 self.txList.append(t)
             else:
                 raise("Unknown type: %s" % result["tx"]["value"]["msg"][0]["type"])

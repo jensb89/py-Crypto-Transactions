@@ -11,4 +11,5 @@ class ExporterDefault(object):
     def exportToCsv(self, outCsvFilename) -> None:
         self.df.to_csv(outCsvFilename)
 
-
+    def exportToExcel(self, outExcelFilename) -> None:
+        self.df.to_excel(outExcelFilename, index=False)

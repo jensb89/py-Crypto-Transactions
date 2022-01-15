@@ -321,6 +321,12 @@ class TransactionList(list):
                 return transaction,idx
         return None
     
+    def fromOrderId(self, orderId):
+        for idx,transaction in enumerate(self):
+            if transaction.orderId == orderId:
+                return transaction,idx
+        return None
+    
     def toPandasDataframe(self):
         data = []
 

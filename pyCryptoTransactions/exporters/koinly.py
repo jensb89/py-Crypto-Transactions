@@ -14,8 +14,6 @@ class KoinlyExporter(ExporterDefault):
     def parseTxs(self):
         data = []
         for tx in self.txData:
-            print(tx.posIn.amount)
-            print(tx.posOut.amount)
             
             #Only fee
             if tx.posIn.amount == 0 and tx.posOut.amount == 0 and tx.fee.amount != 0:
