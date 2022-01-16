@@ -1,0 +1,3 @@
+[submodule "pyCryptoTransactions/exchanges/coinbase/coinbase-v2-api-wrapper"]
+	path = pyCryptoTransactions/exchanges/coinbase/coinbase-v2-api-wrapper
+	url = https://github.com/jensb89/coinbase-v2-api-wrapper

@@ -100,10 +100,12 @@ class Transaction(object):
         if isinstance(dateTime, datetime.datetime):
             self.__datetime = dateTime
         elif isinstance(dateTime, str):
+            if dateTime[-1] == "Z":
+                dateTime = dateTime[:-1]
             try:
                 self.__datetime = datetime.datetime.fromisoformat(dateTime)
             except ValueError:
-                raise
+                print("Iso Format not detected")
         
     @property
     def posIn(self):
@@ -324,6 +326,12 @@ class TransactionList(list):
     def fromOrderId(self, orderId):
         for idx,transaction in enumerate(self):
             if transaction.orderId == orderId:
+                return transaction,idx
+        return None
+    
+    def fromTradeId(self, tradeId):
+        for idx,transaction in enumerate(self):
+            if transaction.tradeId == tradeId:
                 return transaction,idx
         return None
     
