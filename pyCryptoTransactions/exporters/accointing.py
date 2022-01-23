@@ -25,7 +25,27 @@ class AccointingExporter(ExporterDefault):
                 feeCost = True
                 tType = "withdraw"
             else:
-                print("Unknwon type: Tx {}".format(tx.txHash))
+                print("Accointing Export: Unknown type: Tx {}".format(tx.txHash))
+                print(tx)
+                continue
+            
+            if tx.category.lower() == "mining":
+                classification = "mined"
+            elif tx.category.lower() == "income":
+                classification = "income"
+            elif tx.category.lower() == "airdrop":
+                classification = "airdrop" 
+            elif tx.category.lower() == "lending income":
+                classification = "lending_income"
+            elif tx.category.lower() == "lending":
+                classification = "lending"
+            elif tx.category.lower() == "staking income" or tx.category.lower() == "staking":
+                classification = "staked"
+            elif tx.category.lower() == "bounty":
+                classification = "bounty"
+            else:
+                classification = ""
+
             entry = {"transactionType":tType,
                     "date":datetime.datetime.strftime(tx.datetime, "%m/%d/%Y %H:%M:%S"),
                     "inBuyAmount": tx.posIn.amount if tx.posIn.amount != 0 else "",
@@ -36,7 +56,7 @@ class AccointingExporter(ExporterDefault):
                     "feeAmount (optional)": tx.fee.amount if tx.fee.amount >0 and not feeCost else "",
                     "feeAsset (optional)": tx.fee.currency if tx.fee.amount > 0 and not feeCost else "",
 
-                    "classification (optional)": "fee" if feeCost else "", #no support for now
+                    "classification (optional)": "fee" if feeCost else classification, #no support for now
                     "operationId (optional)": tx.txHash}
             data.append(entry)
         self.df = DataFrame(data)

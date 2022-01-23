@@ -3,6 +3,7 @@ import pandas as pd
 import datetime
 from decimal import Decimal
 import numpy as np
+import json
 
 class Position(object):
     """ A position represents an amount and its currency. """
@@ -305,6 +306,22 @@ class Transaction(object):
         if self.posOut.amount == 0 and t.posOut.amount != 0:
             self.posOut = t.posOut
         # todo; check other fields as well
+    
+    def serialize(self, obj):
+        """JSON serializer for objects not serializable by default json code"""
+        if isinstance(obj, datetime.datetime):
+            serial = obj.isoformat()
+            return serial
+
+        if isinstance(obj, Decimal):
+            serial = str(obj)
+            return serial
+
+        return obj.__dict__
+    
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: self.serialize(o), 
+            sort_keys=True, indent=4)
 
 class TransactionList(list):
     def __init__(self):
@@ -366,6 +383,21 @@ class TransactionList(list):
         assets = np.concatenate((assetsIn,assetsOut,assetsFee),axis=None)
         assets = np.unique(assets)
         return assets
+
+    def getLedger(self, coin):
+        for tx in self:
+            if tx.posIn.currency == coin and tx.posIn.amount > 0:
+                print("{}:      {}".format(tx.datetime, tx.posIn.amount))
+            if tx.posOut.currency == coin and tx.posOut.amount > 0:
+                print("{}:     {}".format(tx.datetime, -tx.posOut.amount))
+            if tx.fee.currency == coin and tx.fee.amount > 0:
+                print("{}:     {}".format(tx.datetime, -tx.fee.amount))
+    
+    def toFile(self, filename):
+        out = "[" + ','.join(item.toJSON() for item in self) + ']'
+        with open(filename, "w") as outfile:
+            outfile.write(out)
+        
 
 
 
