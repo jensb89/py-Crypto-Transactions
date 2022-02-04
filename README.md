@@ -27,7 +27,7 @@ Note: Very elary alpha version!
 ```
 t = LitecoinImport("xpub...")
 t.getTransactions()`
-´´´
+```
 
 ```
 t = CosmosChain("cosmos....")
@@ -38,4 +38,4 @@ df.to_csv("atom_test.csv")
 print(txs.calculateBalance())
 a = AccointingExporter(txs)
 a.exportToExcel("atom_accointing.xlsx")
-´´´
+```
