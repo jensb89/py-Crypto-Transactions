@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "pyCryptoTransactions"
+version = "0.1.0"
+description = "Python Package to query crpyto transactions from various blockchains and exchanges through public APIs"
+authors = ["Jens Brauer <jensb89@users.noreply.github.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+requests = "^2.27.1"
+pycoin = "^0.91.20210515"
+pandas = "^1.4.0"
+blockcypher = "^1.0.93"
+
+[tool.poetry.dev-dependencies]
+pycoin = "^0.91.20210515"
+blockcypher = "^1.0.93"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
