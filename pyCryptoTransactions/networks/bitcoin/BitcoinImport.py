@@ -19,11 +19,27 @@ class BitcoinImport(Importer):
     Network = BTC
 
     def __init__(self, publicKey):
+        '''
+        The __init__ function is called when an instance of the class is created
+        :param publicKey: The public key of the user
+        '''
         super().__init__()
         self.publicKey = publicKey
         self._blockExplorerUrl = "http://blockchain.info"
     
     def _getSubkey(self, receiveAddr:bool=True, changeAddr:bool=False, number=0):
+        '''
+        It takes the public key and the desired subkey path as arguments and returns the subkey
+        
+        :param receiveAddr: True if you want to receive coins, False if you want to change coins, defaults
+        to True
+        :type receiveAddr: bool (optional)
+        :param changeAddr: If True, return the change address for the account. If False, return the
+        receiving address, defaults to False
+        :type changeAddr: bool (optional)
+        :param number: the index of the subkey to retrieve, defaults to 0 (optional)
+        :return: The subkey object.
+        '''
         if receiveAddr == changeAddr:
             raise ValueError("Either choose receiving address or change address, not both!")
 
@@ -32,6 +48,18 @@ class BitcoinImport(Importer):
         return subkey
 
     def generateAddresses(self, func, receiveAddr:bool=True, changeAddr:bool=False, numAddresses=1000):
+        '''
+        Generate a list of addresses
+        
+        :param func: the function that generates the address
+        :param receiveAddr: if True, generate a receive address. If False, then generate a change
+        address, defaults to True
+        :type receiveAddr: bool (optional)
+        :param changeAddr: if True, generate a change address, defaults to False
+        :type changeAddr: bool (optional)
+        :param numAddresses: the number of addresses to generate, defaults to 1000 (optional)
+        :return: A generator object.
+        '''
         # returns a generator object
         counter = 0
         while True:
@@ -41,6 +69,17 @@ class BitcoinImport(Importer):
             counter += 1
 
     def generateAddress(self, receiveAddr:bool=True, changeAddr:bool=False, number=0):
+        '''
+        If you want to generate an address, call this function
+        
+        :param receiveAddr: If True, the address will be marked as a receiving address. If False, it will be
+        marked as a change address, defaults to True
+        :type receiveAddr: bool (optional)
+        :param changeAddr: If True, the address will be for change (rather than receive), defaults to False
+        :type changeAddr: bool (optional)
+        :param number: The index of the subkey to generate, defaults to 0 (optional)
+        :return: The address of the subkey.
+        '''
         subkey = self._getSubkey(receiveAddr, changeAddr, number)
         return subkey.address()
 
@@ -68,15 +107,13 @@ class BitcoinImport(Importer):
         #print("Querying Tx {}".format(txHash))
         return blockcypher.get_transaction_details(txHash, coin_symbol=self.Network.symbol.lower())
 
-    #def _getRawTxsForAddress(self, address, offset=None):
-    #    url = "{}/rawaddr/{}".format(self.BLOCK_EXPLORER_URL, address)
-    #    if offset:
-    #        url += "&offset={}".format(offset)
-    #    data = self._query(url)
-
-    #    return data
-
     def _query(self, url):
+        '''
+        Query the data. Takes a url as an input, calls the url, and returns the data
+        
+        :param url: the url to query
+        :return: A dictionary of data.
+        '''
         response = requests.get(url)
         print("Calling {}".format(url))
         if response.status_code != 200:

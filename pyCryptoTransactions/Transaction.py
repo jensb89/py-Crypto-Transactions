@@ -217,12 +217,31 @@ class Transaction(object):
                        tradingPair:tuple = [None, None],
                        network:str = "",
                        wallet:str = ""):
-        """
-        Args:
-            datetime (datetime):                        The trading time
-            fee (Fee):                                  Amount of trading fee
-            ...todo: extend
-        """
+        '''
+        The __init__ function is called when you create a new object
+        
+        :param dateTime: The time of the trade
+        :param price: The price of the trade
+        :type price: Decimal
+        :param posIn: The position you bought the tokens
+        :type posIn: Position
+        :param posOut: The amount of the currency that you received
+        :type posOut: Position
+        :param fee: The fee that was paid for the trade
+        :type fee: Fee
+        :param txHash: The hash of the transaction that this trade is part of
+        :type txHash: str
+        :param category: The category of the transaction. Can be one of the following:
+        :type category: str
+        :param blockHeight: The block number of the block the transaction was included in, defaults to 0
+        :type blockHeight: int (optional)
+        :param tradingPair: A tuple of the form (base, quote) where base and quote are the names of the assets
+        :type tradingPair: tuple
+        :param network: The network that the transaction was made on
+        :type network: str
+        :param wallet: The wallet that initiated the transaction
+        :type wallet: str
+        '''
 
         super().__init__()
 
