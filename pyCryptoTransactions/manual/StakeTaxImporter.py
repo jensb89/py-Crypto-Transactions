@@ -53,7 +53,7 @@ class StakeTaxImporter(CSVImporterDefault):
             if key not in self.df:
                 print("Warning: {} is not included in file {}".format(key, self.filename))
     
-    def getTransactions(self, time=None) -> TransactionList:
+    def getTransactions(self, startTime=None, offset=None) -> TransactionList:
         #return super().getTransactions(address, time=time)
         return self.parseFile()
 

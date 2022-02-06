@@ -21,7 +21,7 @@ class IotaImport(Importer):
         else:
             self.rawTxs = response["transactions"]
 
-    def getTransactions(self, time=None) -> TransactionList:
+    def getTransactions(self, startTime=None, offset=None) -> TransactionList:
         self._findTransactions()
         for tx in self.rawTxs:
             if tx.value != 0:

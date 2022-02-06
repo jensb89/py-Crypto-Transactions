@@ -382,7 +382,7 @@ class BinanceManual(Importer):
         return True
 
 
-    def getTransactions(self, time=None) -> TransactionList:
+    def getTransactions(self, startTime=None, offset=None) -> TransactionList:
         self.txList.sort(key=lambda r: r.datetime)
         return self.txList
 

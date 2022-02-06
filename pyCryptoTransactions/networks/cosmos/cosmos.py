@@ -290,7 +290,7 @@ class CosmosChain(Importer):
         return txList
 
 
-    def getTransactions(self, time=None) -> TransactionList:
+    def getTransactions(self, startTime=None, offset=None) -> TransactionList:
         self.rawTxs = self._getAllRawTransactions()
 
         for tx in self.rawTxs:

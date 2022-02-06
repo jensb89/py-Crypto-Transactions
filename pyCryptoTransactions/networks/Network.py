@@ -3,6 +3,7 @@ from abc import abstractclassmethod, abstractmethod
 
 import abc
 #import Transaction, TransactionList
+from ..Transaction import TransactionList
 
 class Network(metaclass=abc.ABCMeta):
 
@@ -14,5 +15,5 @@ class Network(metaclass=abc.ABCMeta):
         return self._blockExplorerUrl
 
     @abc.abstractmethod
-    def getTransactions(self, address, time=None): #-> "TransactionList":
+    def getTransactions(self, address, startTime=None, offset=None) -> TransactionList:
         return
