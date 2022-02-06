@@ -1,5 +1,5 @@
-from pyCryptoTransactions import Importer
-from pyCryptoTransactions.Transaction import TransactionList
+from . import Importer
+from .Transaction import TransactionList
 
 class Wallet(object):
 

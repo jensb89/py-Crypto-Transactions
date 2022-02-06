@@ -7,6 +7,11 @@ pyCryptoTransactions also supports a few exporters, such that data can be import
 
 Note: Very elary alpha version!
 
+## Install
+Use pip:
+ * pip install pyCryptoTransactions (NOTE: make sure to use camelCase name like this and not pycryptotransactions)
+Or use poetry 
+Or install directly by cloning the git repo
 ## Supported Blockchains
  * Bitcoin
  * Litecoin

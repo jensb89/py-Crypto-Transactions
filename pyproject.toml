@@ -1,10 +1,13 @@
 [tool.poetry]
 name = "pyCryptoTransactions"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python Package to query crpyto transactions from various blockchains and exchanges through public APIs"
 authors = ["Jens Brauer <jensb89@users.noreply.github.com>"]
 readme = "README.md"
 repository = "https://github.com/jensb89/py-Crypto-Transactions"
+packages = [
+    {include = "pyCryptoTransactions"}
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
