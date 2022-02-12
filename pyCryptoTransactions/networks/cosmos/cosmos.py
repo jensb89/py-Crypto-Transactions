@@ -9,6 +9,7 @@ from copy import deepcopy
 
 from pyCryptoTransactions.Transaction import Position, Transaction,TransactionList, Fee
 from pyCryptoTransactions.Importer import Importer
+from pyCryptoTransactions.Coin import Coin
 import time
 
 class CosmosChain(Importer):
@@ -117,16 +118,21 @@ class CosmosChain(Importer):
         amountList = list()
         for amount in amounts:
             number, unit = self._parseAmount(amount)
+            contractAddress = None
+            symbol = unit
             if unit == '' and float(number) > 0:
-                unit = self.unit
+                symbol = self.unit
             # check for ibc token
             if unit[0:4] == "ibc/":
-                unit, decimal = self.getIbcTokenSymbolFromIBCTokenHash(unit[4:])
+                symbol, decimal = self.getIbcTokenSymbolFromIBCTokenHash(unit[4:])
+                contractAddress = unit
             else:
-                unit = self.getSymbol(unit)
+                symbol = self.getSymbol(unit)
                 decimal = self.denominator
             
-            amountList.append(Position(Decimal(number)/Decimal(decimal), unit))
+            coin = Coin(symbol=symbol, contractAddress=contractAddress)
+            
+            amountList.append(Position(Decimal(number)/Decimal(decimal), coin))
         return amountList
 
     def _findEventByType(self, allEvents, type:str):

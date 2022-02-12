@@ -8,8 +8,8 @@ class Coin(object):
         return self.__symbol
     
     @symbol.setter
-    def symbol(self, value):
-       self.__symbol = value
+    def symbol(self, value:str):
+       self.__symbol = value.upper()
 
     @property
     def name(self) -> str:
@@ -41,7 +41,7 @@ class Coin(object):
         return self.__contractAddress
     
     @contractAddress.setter
-    def id(self, value):
+    def contractAddress(self, value):
        self.__contractAddress = value
     
     def __init__(self, symbol:str, name=None, id=None, contractAddress = None ) -> None:
@@ -50,6 +50,9 @@ class Coin(object):
         self.name = name
         self.id = id 
         self.contractAddress = contractAddress
+
+    def __repr__(self) -> str:
+        return self.__symbol
     
 
     

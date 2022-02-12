@@ -4,6 +4,8 @@ import datetime
 from decimal import Decimal
 import numpy as np
 import json
+from typing import Union
+from .Coin import Coin
 
 class Position(object):
     """ A position represents an amount and its currency. """
@@ -22,7 +24,7 @@ class Position(object):
         return self.__amount
     
     @amount.setter
-    def amount(self, amount):
+    def amount(self, amount:str | Decimal | float | int):
         if not(isinstance(amount, Decimal)):
             if isinstance(amount,str):
                 amount = Decimal(amount)
@@ -43,12 +45,21 @@ class Position(object):
         return self.__currency
     
     @currency.setter
-    def currency(self, value:str):
+    def currency(self, value:str|Coin):
+        if isinstance(value, Coin):
+            self.__currency = value
+            return
+        if isinstance(value, str):
+            self.__currency = Coin(value.upper())
+            return 
         if not(isinstance(value, str)):
-            value = str(value).upper()
+            value = Coin(str(value).upper())
+            self.__currency = value
+            return 
         if value == "nan":
             return
-        self.__currency = value.upper()
+        else:
+            BaseException("Coin: Wrong setting of Coin")
     
     def __add__(self, new):
         """
@@ -70,7 +81,7 @@ class Position(object):
     def __eq__(self, __o: object) -> bool:
         """Overrides the default implementation"""
         if isinstance(__o, Position):
-            return self.amount == __o.amount and self.currency == __o.currency
+            return self.amount == __o.amount and self.currency.symbol == __o.currency.symbol
         return NotImplemented
     
     def __repr__(self):
@@ -284,15 +295,15 @@ class Transaction(object):
     def __repr__(self):
         return ", ".join([self.datetime.strftime("%Y/%m/%d, %H:%M:%S"),
                           str(self.posIn.amount) if self.posIn else "NONE",
-                          self.posIn.currency,
+                          self.posIn.currency.symbol,
                           str(self.posOut.amount) if self.posOut else "NONE",
-                          self.posOut.currency,
+                          self.posOut.currency.symbol,
                           self.txHash,
                           #self.trading_pair[0],
                           #self.trading_pair[1],
                           #str(self.price),
                           str(self.fee.amount),
-                          self.fee.currency, self.note])
+                          self.fee.currency.symbol, self.note])
     
     def asDict(self):
         d = dict()
@@ -395,12 +406,15 @@ class TransactionList(list):
         return balance
 
     def getAssetList(self):
-        df = self.toPandasDataframe()
-        assetsIn = df["Sent Currency"].unique()
-        assetsOut = df["Received Currency"].unique()
-        assetsFee = df["Fee Currency"].unique()
-        assets = np.concatenate((assetsIn,assetsOut,assetsFee),axis=None)
-        assets = np.unique(assets)
+        assets = []
+        for tx in self:
+            if tx.posIn.currency.symbol != "":
+                assets.append(tx.posIn.currency.symbol)
+            if tx.posOut.currency.symbol != "":
+                assets.append(tx.posOut.currency.symbol)
+            if tx.fee.currency.symbol != "":
+                assets.append(tx.fee.currency.symbol)
+        assets = list(set(assets)) # unique strings
         return assets
 
     def getLedger(self, coin):

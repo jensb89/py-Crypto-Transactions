@@ -8,7 +8,7 @@ from enum import Enum
 from pyCryptoTransactions.networks.Network import Network
 from pyCryptoTransactions.Transaction import Position, Transaction, TransactionList, Fee
 from pyCryptoTransactions.Importer import Importer
-
+from pyCryptoTransactions.Coin import Coin
 class AddresType(Enum):
     LEGACY = 0
     SEGWIT = 1
@@ -26,6 +26,7 @@ class BitcoinImport(Importer):
         super().__init__()
         self.publicKey = publicKey
         self._blockExplorerUrl = "http://blockchain.info"
+        self.coin = Coin(self.Network.symbol, self.Network.network_name)
     
     def _getSubkey(self, receiveAddr:bool=True, changeAddr:bool=False, number=0):
         '''
@@ -150,11 +151,11 @@ class BitcoinImport(Importer):
                     t.txHash = txHash
                     
                 if isIn and receiving:
-                        t.posIn += Position(change, self.Network.symbol)
+                        t.posIn += Position(change, self.coin)
                 if isOut:
-                        t.posOut += Position(change, self.Network.symbol)
+                        t.posOut += Position(change, self.coin)
                 if isIn and not(receiving):
-                        t.posOut += Position(-change, self.Network.symbol)
+                        t.posOut += Position(-change, self.coin)
                 
                 if not(txFound):
                     self.txList.append(t)

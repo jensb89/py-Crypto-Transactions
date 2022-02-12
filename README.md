@@ -1,5 +1,12 @@
 # py-Crypto-Transactions
 
+[![PyPI](https://badge.fury.io/py/pycryptotransactions.svg)](https://badge.fury.io/py/pycryptotransactions)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/pycryptotransactions)
+![GitHub](https://img.shields.io/github/license/pcko1/pycryptotransactions)
+[![Python 3.8](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/release/python-310/)
+![GitHub Issues](https://img.shields.io/github/issues/jensb89/py-Crypto-Transactions)
+
+
 A python package to query crypto transaction from various blockchains and exchanges
 to build your own portfolio app!
 

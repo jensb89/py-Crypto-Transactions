@@ -10,6 +10,7 @@ from copy import deepcopy
 
 from pyCryptoTransactions.Transaction import Position, Transaction,TransactionList, Fee
 from pyCryptoTransactions.Importer import Importer
+from pyCryptoTransactions.Coin import Coin
 
 class BinanceChain(Importer):
     def __init__(self, address):
@@ -218,22 +219,24 @@ class BinanceChain(Importer):
                 t.orderId = order["id"]
                 orderInfo = self.getOrder(t.orderId)
                 pair = order["symbol"].split('_')
+                coin1 = Coin(pair[0].split('-'), contractAddress=pair[0])
+                coin2 = Coin(pair[1].split('-'), contractAddress=pair[1])
 
                 trades = self.getTrades(timestamp=int(t.datetime.timestamp()*1E3), orderId=t.orderId, isBuy=orderInfo["side"]==1)
                 if order["ordertype"] == 2 and order["side"]==2: #sell
-                    posIn = Position(Decimal(0),pair[1].split('-')[0])
-                    posOut = Position(Decimal(0),pair[0].split('-')[0])
+                    posIn = Position(Decimal(0),coin2)
+                    posOut = Position(Decimal(0),coin1)
                     fee = Fee(0, "BNB")
                     for trade in trades["trade"]:
-                        posIn += Position( Decimal(trade["price"].rstrip("0")) * Decimal(trade["quantity"].rstrip("0")), pair[1].split('-')[0])
-                        posOut += Position( Decimal(trade["quantity"].rstrip("0")), pair[0].split('-')[0])
+                        posIn += Position( Decimal(trade["price"].rstrip("0")) * Decimal(trade["quantity"].rstrip("0")), coin2)
+                        posOut += Position( Decimal(trade["quantity"].rstrip("0")), coin1)
                     fee = Fee( Decimal(trade["sellFee"].split(";")[0].split("BNB:")[1]), "BNB")
                 elif order["ordertype"] == 2 and order["side"]==1: #buy
-                    posIn = Position(Decimal(0),pair[0].split('-')[0])
-                    posOut = Position(Decimal(0),pair[1].split('-')[0])
+                    posIn = Position(Decimal(0),coin1)
+                    posOut = Position(Decimal(0),coin2)
                     for trade in trades["trade"]:
-                        posIn += Position(  Decimal(trade["quantity"].rstrip("0")), pair[0].split('-')[0])
-                        posOut += Position(Decimal(trade["price"].rstrip("0")) * Decimal(trade["quantity"].rstrip("0")), pair[1].split('-')[0])
+                        posIn += Position(  Decimal(trade["quantity"].rstrip("0")), coin1)
+                        posOut += Position(Decimal(trade["price"].rstrip("0")) * Decimal(trade["quantity"].rstrip("0")), coin2)
                     fee = Fee( Decimal(trade["buyFee"].split(";")[0].split("BNB:")[1]), "BNB")
 
                 t.posIn = posIn
@@ -256,7 +259,7 @@ class BinanceChain(Importer):
                 
                 #t.fee = Fee(0, "BNB")
                 t.price = Decimal(order["price"])/self.denominator
-                t.tradingPair = (pair[0].split('-')[0], pair[1].split('-')[0])
+                t.tradingPair = (coin1, coin2)
                 
                 self.txList.append(t)
 
